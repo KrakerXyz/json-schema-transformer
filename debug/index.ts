@@ -2,7 +2,7 @@
 import * as ts from 'typescript';
 import * as path from 'path';
 import * as fs from 'fs';
-import transformer from '../src/transformer';
+import transformer from '../src/transformer/transformer';
 
 console.log('Starting');
 console.log();
