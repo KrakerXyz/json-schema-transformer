@@ -2,16 +2,25 @@
 import { jsonSchema } from '../../src';
 
 type ObjectTest = {
-    id: number;
+    id: number | string | null;
     name: string;
     description: string | null;
+    setup: {
+        test: string;
+    }
 }
 
-type ArrayTest = ObjectTest[];
 
 const objectTestSchema = jsonSchema<ObjectTest>();
-const arrayTestSchema = jsonSchema<ArrayTest>();
 
-objectTestSchema.properties.description.type
+objectTestSchema.properties.id;
+objectTestSchema.properties.name;
+objectTestSchema.properties.description;
+objectTestSchema.properties.setup.$oneOf[0].properties.test;
 
-console.log({ objectTestSchema, arrayTestSchema });
+console.log({ objectTestSchema });
+
+/*
+type ArrayTest = ObjectTest[];
+//const arrayTestSchema = jsonSchema<ArrayTest>();
+*/

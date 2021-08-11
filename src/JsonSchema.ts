@@ -17,16 +17,11 @@ type ObjectSchema<T extends Record<string, any>> = {
 };
 
 type Properties<T> = {
-    [K in keyof T]: PropertyType<T[K]>
+    [K in keyof T]: {
+        $oneOf: [PropertyType<T[K]>]
+    }
 }
 
 type PropertyType<T> =
     T extends any[] | Record<string, any> ? JsonSchema<T>
-    : { type: [keyof T] }
-
-type PropertyTypeType<T> =
-    T extends any[] | Record<string, any> ? JsonSchema<T>
-    : T extends number ? 'number'
-    : T extends string ? 'string'
-    : T extends null ? 'null'
-    : never;
+    : { type: 'string' | 'number' | 'boolean' }

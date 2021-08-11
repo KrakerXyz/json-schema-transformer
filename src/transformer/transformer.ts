@@ -1,31 +1,36 @@
 
 import * as ts from 'typescript';
+import { createEntity } from './entity';
+import { createEntityNode } from './entityNode';
 
-export default function transformer(_program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
+export default function transformer(program: ts.Program): ts.TransformerFactory<ts.SourceFile> {
+
+   const typeChecker = program.getTypeChecker();
+
    return (context: ts.TransformationContext) => {
 
-      const visit: ts.Visitor = (node): ts.Node => {
+      return (file: ts.SourceFile) => {
 
-          if (ts.isNewExpression(node) && node.expression.getText() === 'TypedEntity') {
-             
-              return node;
+         const visit: ts.Visitor = (node): ts.Node => {
 
-            //If the user gave an explicit config, don't overwrite them
-            // if (node.arguments?.length) {
-            //    return node;
-            // }
+            if (!ts.isCallExpression(node)) { return ts.visitEachChild(node, (child) => visit(child), context); }
+            if (node.expression.getText() !== 'jsonSchema') { return ts.visitEachChild(node, (child) => visit(child), context); }
 
-            // const typedEntityNode = TypedEntityNode.create(node, program.getTypeChecker(), config);
-            // const newNode = typedEntityNode.getNode();
-            // return newNode;
+            console.log(`Found jsonSchema() in ${file.fileName}`);
+            if (node.typeArguments?.length !== 1) { throw new Error('Expecting one and only one type argument for jsonSchema()'); }
 
-         }
+            const entity = createEntity(typeChecker, node.typeArguments[0]);
 
-         return ts.visitEachChild(node, (child) => visit(child), context);
+            console.log(entity);
 
+            const replacement = createEntityNode(entity);
+
+            return replacement;
+
+         };
+
+         return ts.visitNode(file, visit);
       };
-
-      return (file: ts.SourceFile) => ts.visitNode(file, visit);
    };
 
 }

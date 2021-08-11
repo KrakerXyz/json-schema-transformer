@@ -19,8 +19,6 @@ const compilerOptions: ts.CompilerOptions = {
     noPropertyAccessFromIndexSignature: true,
 };
 
-console.log('compilerOptions', compilerOptions);
-
 // create compiler host, program, and then emit the results
 // using our transform
 const compilerHost = ts.createCompilerHost(compilerOptions);
@@ -37,8 +35,6 @@ function* walkDirectorySync(dir: string): Generator<string> {
 }
 
 const rootFiles = [...walkDirectorySync(path.join(__dirname, '..\\..\\debug\\sut'))].filter(f => f.endsWith('.ts'));
-
-console.log('rootFiles', rootFiles);
 
 const program = ts.createProgram(rootFiles, compilerOptions, compilerHost);
 const emitResult = program.emit(undefined, undefined, undefined, undefined, {
