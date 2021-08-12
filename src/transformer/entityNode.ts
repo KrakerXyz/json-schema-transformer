@@ -2,18 +2,23 @@ import * as ts from 'typescript';
 import { Entity } from './entity';
 import { Properties, Property, PropertyValue, ValueType, ValueValue } from './properties';
 
-export function createEntityNode(entity: Entity): ts.ObjectLiteralExpression {
+export function createEntityNode(entity: Entity | [Entity]): ts.ObjectLiteralExpression {
 
-    const additionalPropertiesEx = ts.factory.createPropertyAssignment('additionalProperties', ts.factory.createFalse());
+    let jsonSchemaEx: ts.ObjectLiteralExpression | undefined;
 
-    const jsonSchemaEx = createObjectType(entity.properties, additionalPropertiesEx);
-
-
+    if (Array.isArray(entity)) {
+        jsonSchemaEx = ts.factory.createObjectLiteralExpression([
+            ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('array')),
+            ts.factory.createPropertyAssignment('items', createObjectType(entity[0].properties))
+        ]);
+    } else {
+        jsonSchemaEx = createObjectType(entity.properties);
+    }
 
     return jsonSchemaEx;
 }
 
-function createObjectType(properties: Properties, ...additionalProperties: ts.PropertyAssignment[]): ts.ObjectLiteralExpression {
+function createObjectType(properties: Properties): ts.ObjectLiteralExpression {
     const typeEx = ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('object'));
     const propertiesEx = ts.factory.createPropertyAssignment('properties', createPropertiesExpression(properties));
 
@@ -23,11 +28,13 @@ function createObjectType(properties: Properties, ...additionalProperties: ts.Pr
     const requiredArrEx = ts.factory.createArrayLiteralExpression(requiredEx);
     const requiredPropEx = ts.factory.createPropertyAssignment('required', requiredArrEx);
 
+    const additionalPropertiesEx = ts.factory.createPropertyAssignment('additionalProperties', ts.factory.createFalse());
+
     const jsonSchemaEx = ts.factory.createObjectLiteralExpression([
         typeEx,
         propertiesEx,
         requiredPropEx,
-        ...additionalProperties
+        additionalPropertiesEx
     ]);
 
     return jsonSchemaEx;

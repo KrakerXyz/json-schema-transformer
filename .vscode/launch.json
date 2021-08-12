@@ -16,6 +16,7 @@
             "outFiles": [
                 "${workspaceFolder}/dist-debug/**/*.js"
             ],
+            "internalConsoleOptions": "openOnSessionStart",
             "outputCapture": "std" //to capture winston console logs
         }
     ]
