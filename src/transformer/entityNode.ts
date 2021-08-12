@@ -115,8 +115,33 @@ function createPropertyTypeExpression(values: PropertyValue[]): ts.ObjectLiteral
                 types.push(ts.factory.createObjectLiteralExpression([]));
                 break;
             }
+            case ValueType.Array: {
+                const arrayTypes = createPropertyTypeExpression(value.value);
+                types.push(
+                    ts.factory.createObjectLiteralExpression([
+                        ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('array')),
+                        ts.factory.createPropertyAssignment('items', arrayTypes)
+                    ]));
+
+                break;
+            }
+            case ValueType.Tuple: {
+
+                const arrayTypes = value.value.map(tv => createPropertyTypeExpression(tv));
+
+                const arrayEx = ts.factory.createArrayLiteralExpression(arrayTypes);
+
+                const jsonSchemaEx = ts.factory.createObjectLiteralExpression([
+                    ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('array')),
+                    ts.factory.createPropertyAssignment('items', arrayEx)
+                ]);
+
+                types.push(jsonSchemaEx);
+
+                break;
+            }
             default: {
-                throw new Error(`Unexpected value type ${value.type}`);
+                const _: never = value;
             }
         }
     }

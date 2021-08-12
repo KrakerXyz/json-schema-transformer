@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 
 
 import * as ts from 'typescript';
@@ -158,6 +159,26 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
             const unionTypeFields = (t as ts.UnionTypeNode).types.map(t => getType(fullName, t, typeChecker));
             return unionTypeFields.flatMap(t => t);
         }
+        case ts.SyntaxKind.TupleType: {
+
+            const tupleTypes: PropertyValue[][] = [];
+
+            for (const e of (t as ts.TupleTypeNode).elements) {
+                if (ts.isRestTypeNode(e)) {
+                    const eType = getType(fullName, e.type, typeChecker);
+                    if (eType.length !== 1) { throw new Error('Unexpected number of types created from rest parameter'); }
+                    (eType[0] as ArrayValue).isRest = true;
+                    tupleTypes.push(eType);
+                } else {
+                    tupleTypes.push(getType(fullName, e, typeChecker));
+                }
+            }
+
+            return [{
+                type: ValueType.Tuple,
+                value: tupleTypes
+            }];
+        }
         default: throw new Error(`Property type ${ts.SyntaxKind[t.kind]} for ${fullName} not supported`);
     }
 }
@@ -166,7 +187,7 @@ export type Properties = Record<string, Property>;
 
 export type Property = { isOptional: boolean, values: PropertyValue[] }
 
-export type PropertyValue = LiteralValue | ObjectValue | ValueValue | ArrayValue | NullValue | AnyValue;
+export type PropertyValue = LiteralValue | ObjectValue | ValueValue | ArrayValue | NullValue | AnyValue | TupleValue;
 
 export enum ValueType {
     Null = 'nil',
@@ -174,7 +195,8 @@ export enum ValueType {
     Literal = 'lit',
     Object = 'obj',
     Array = 'arr',
-    Any = 'any'
+    Any = 'any',
+    Tuple = 'tup'
 }
 
 export interface NullValue {
@@ -203,5 +225,14 @@ export interface ObjectValue {
 
 export interface ArrayValue {
     type: ValueType.Array;
-    value: PropertyValue[]
+    /** Array of the possible value types for the array */
+    value: PropertyValue[];
+    /** Indicates that this array was part of a spread (...) */
+    isRest?: boolean;
+}
+
+export interface TupleValue {
+    type: ValueType.Tuple,
+    /** The value types possible for each element of the Tuple */
+    value: PropertyValue[][]
 }
