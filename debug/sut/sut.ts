@@ -1,26 +1,12 @@
 
 import { jsonSchema } from '../../src';
 
-type ObjectTest = {
-    id: number | string | null;
-    name: string;
-    description: string | null;
-    setup: {
-        test: string;
-    }
+
+export interface User {
+    readonly id: string;
+    readonly email: string | null;
+    readonly created: number;
+    /** Time stamp of the last time a authenticated service was used. Could be off by 15 minutes. */
+    readonly lastSeen: number;
 }
-
-
-const objectTestSchema = jsonSchema<ObjectTest>();
-
-objectTestSchema.properties.id;
-objectTestSchema.properties.name;
-objectTestSchema.properties.description;
-objectTestSchema.properties.setup.$oneOf[0].properties.test;
-
-console.log({ objectTestSchema });
-
-/*
-type ArrayTest = ObjectTest[];
-//const arrayTestSchema = jsonSchema<ArrayTest>();
-*/
+const _ = jsonSchema<User>();

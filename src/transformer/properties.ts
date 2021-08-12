@@ -10,7 +10,9 @@ export function createProperty(typeChecker: ts.TypeChecker, symbol: ts.Symbol): 
     if (symbol.declarations.length > 1) { throw new Error(`More than one declaration for symbol was unexpected (${fullName})`); }
 
     const declaration = symbol.declarations[0];
-    if (!ts.isPropertySignature(declaration)) { throw new Error(`Declaration for symbol was not a PropertyDeclaration (${fullName})`); }
+    if (!ts.isPropertySignature(declaration)) {
+        throw new Error(`Declaration for symbol was not a PropertyDeclaration (${fullName})`);
+    }
     return {
         isOptional: !!declaration.questionToken,
         values: getType(fullName, declaration.type!, typeChecker)
@@ -26,6 +28,7 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
             type: ValueType.Value,
             value: 'number'
         }];
+        case ts.SyntaxKind.TemplateLiteralType:
         case ts.SyntaxKind.StringKeyword: return [{
             type: ValueType.Value,
             value: 'string'
@@ -110,9 +113,27 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
                 return [{ type: ValueType.Any }];
             }
 
+            const texts: string[] | undefined = (type as any).texts;
+            if (texts?.length && texts[0] == '' && texts.slice(-1)[0] === '') {
+                //When we have something like 
+                //
+                //type Id = `${string}-${string}`
+                //interface Foo {
+                //   id: Id
+                //}
+                //We end up getting this TypeLiteral but I can find no way to see that it is a string literal other than hoping this texts test is sufficient.
+                //From what I've seen, no matter the interpolations, the texts always has '' as the first and last elements. For the above example, it would be
+                //['', '-', '']
+                return [{
+                    type: ValueType.Value,
+                    value: 'string'
+                }];
+
+            }
+
             const typeProperties = typeChecker.getPropertiesOfType(type);
-            const fields = typeProperties.map(s => createProperty(typeChecker, s));
-            const fieldConfig = fields.reduce((prev, cur) => ({ ...prev, ...cur }), {} as Property);
+            const fields = typeProperties.map(s => ({ [s.name]: createProperty(typeChecker, s) }));
+            const fieldConfig = fields.reduce((prev, cur) => ({ ...prev, ...cur }), {} as Record<string, Property>);
 
             return [{
                 type: ValueType.Object,
@@ -141,6 +162,7 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
     }
 }
 
+export type Properties = Record<string, Property>;
 
 export type Property = { isOptional: boolean, values: PropertyValue[] }
 
@@ -176,7 +198,7 @@ export interface LiteralValue {
 
 export interface ObjectValue {
     type: ValueType.Object;
-    value: Property;
+    value: Properties;
 }
 
 export interface ArrayValue {

@@ -13,7 +13,9 @@
     "dist/"
   ],
   "keywords": [
-    "led"
+    "json",
+    "schema",
+    "transformer"
   ],
   "author": {
     "name": "Josh Kraker",

@@ -21,8 +21,6 @@ export default function transformer(program: ts.Program): ts.TransformerFactory<
 
             const entity = createEntity(typeChecker, node.typeArguments[0]);
 
-            console.log(entity);
-
             const replacement = createEntityNode(entity);
 
             return replacement;

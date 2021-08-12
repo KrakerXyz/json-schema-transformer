@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { createProperty, Property } from './properties';
+import { createProperty, Properties } from './properties';
 
 export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): Entity {
     const type = typeChecker.getTypeFromTypeNode(node);
@@ -10,7 +10,7 @@ export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): En
         return { ...p, [sym.name]: prop };
     }, {} as Entity['properties']);
 
-    const name = type.aliasSymbol?.name;
+    const name = type.aliasSymbol?.name ?? (node as any).typeName?.text;
     if (!name) { throw new Error('Could not get type argument type name'); }
 
     return {
@@ -21,5 +21,5 @@ export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): En
 
 export interface Entity {
     name: string;
-    properties: Record<string, Property>;
+    properties: Properties;
 }
