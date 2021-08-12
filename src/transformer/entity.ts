@@ -10,17 +10,17 @@ export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): En
         }
 
         const type = typeChecker.getTypeFromTypeNode(node.elementType);
-        const entity = getEntityFromType(typeChecker, type, node.elementType);
+        const entity = getEntityFromType(typeChecker, type);
         return [entity];
     } else {
         const type = typeChecker.getTypeFromTypeNode(node);
-        const entity = getEntityFromType(typeChecker, type, node);
+        const entity = getEntityFromType(typeChecker, type);
         return entity;
     }
 
 }
 
-function getEntityFromType(typeChecker: ts.TypeChecker, type: ts.Type, node: ts.TypeNode): Entity {
+function getEntityFromType(typeChecker: ts.TypeChecker, type: ts.Type): Entity {
     const symbols = typeChecker.getPropertiesOfType(type);
 
     const properties = symbols.reduce((p, sym) => {
@@ -28,16 +28,11 @@ function getEntityFromType(typeChecker: ts.TypeChecker, type: ts.Type, node: ts.
         return { ...p, [sym.name]: prop };
     }, {} as Entity['properties']);
 
-    const name = type.aliasSymbol?.name ?? (node as any).typeName?.text;
-    if (!name) { throw new Error('Could not get type argument type name'); }
-
     return {
-        name,
         properties
     };
 }
 
 export interface Entity {
-    name: string;
     properties: Properties;
 }
