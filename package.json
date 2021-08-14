@@ -1,6 +1,7 @@
 {
   "name": "@krakerxyz/json-schema-transformer",
   "description": "TypeScript transformer that will generate a json schema for a given type at build time.",
+  "private": false,
   "version": "0.1.0",
   "repository": {
     "type": "git",
