@@ -2,7 +2,7 @@
 import * as ts from 'typescript';
 import * as path from 'path';
 import * as fs from 'fs';
-import transformer from '../src/transformer';
+import transformer from '../src/transformer/transformer';
 
 console.log('Starting');
 console.log();
@@ -18,8 +18,6 @@ const compilerOptions: ts.CompilerOptions = {
     noImplicitReturns: true,
     noPropertyAccessFromIndexSignature: true,
 };
-
-console.log('compilerOptions', compilerOptions);
 
 // create compiler host, program, and then emit the results
 // using our transform
@@ -37,8 +35,6 @@ function* walkDirectorySync(dir: string): Generator<string> {
 }
 
 const rootFiles = [...walkDirectorySync(path.join(__dirname, '..\\..\\debug\\sut'))].filter(f => f.endsWith('.ts'));
-
-console.log('rootFiles', rootFiles);
 
 const program = ts.createProgram(rootFiles, compilerOptions, compilerHost);
 const emitResult = program.emit(undefined, undefined, undefined, undefined, {
