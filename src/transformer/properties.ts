@@ -110,6 +110,12 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
                 return values;
             }
 
+            //This tests for a property who's value is a specific enum value. Eg, { foo: Foo.Bar } where Foo is an enum
+            const typeSymbolDecl0: ts.Declaration | undefined = (type.symbol.declarations ?? [])[0];
+            if (typeSymbolDecl0 && ts.isEnumMember(typeSymbolDecl0)) {
+                return [{ type: ValueType.Literal, value: (type as any).value }];
+            }
+
             if (refType.typeName?.getText() === 'Record') {
                 return [{ type: ValueType.Any }];
             }

@@ -2,15 +2,30 @@ import * as ts from 'typescript';
 import { Entity } from './entity';
 import { Properties, Property, PropertyValue, ValueType, ValueValue } from './properties';
 
-export function createEntityNode(entity: Entity | [Entity]): ts.ObjectLiteralExpression {
+//Entity: The schema is just a simple object
+//[Entity]: The schema is an array of single type Entity
+//[Entity[]]: The schema is an array with more than one element type
+export function createEntityNode(entity: Entity | [Entity] | [Entity[]]): ts.ObjectLiteralExpression {
 
     let jsonSchemaEx: ts.ObjectLiteralExpression | undefined;
 
     if (Array.isArray(entity)) {
-        jsonSchemaEx = ts.factory.createObjectLiteralExpression([
-            ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('array')),
-            ts.factory.createPropertyAssignment('items', createObjectType(entity[0].properties))
-        ]);
+
+        console.assert(entity.length === 1);
+
+        const properties: ts.PropertyAssignment[] = [
+            ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('array'))
+        ];
+
+        if (Array.isArray(entity[0])) {
+            const elementObjects = entity[0].map(e => createObjectType(e.properties));
+            const anyOf = createAnyOfObjectExpression(elementObjects);
+            properties.push(ts.factory.createPropertyAssignment('items', anyOf));
+        } else {
+            properties.push(ts.factory.createPropertyAssignment('items', createObjectType(entity[0].properties)));
+        }
+
+        jsonSchemaEx = ts.factory.createObjectLiteralExpression(properties);
     } else {
         jsonSchemaEx = createObjectType(entity.properties);
     }
@@ -147,11 +162,16 @@ function createPropertyTypeExpression(values: PropertyValue[]): ts.ObjectLiteral
     }
 
     if (types.length > 1) {
-        const typesArrayEx = ts.factory.createArrayLiteralExpression(types);
-        const allOfProp = ts.factory.createPropertyAssignment('anyOf', typesArrayEx);
-        const allOfExp = ts.factory.createObjectLiteralExpression([allOfProp]);
-        return allOfExp;
+        const anyOf = createAnyOfObjectExpression(types);
+        return anyOf;
     }
 
     return types[0];
+}
+
+function createAnyOfObjectExpression(types: ts.ObjectLiteralExpression[]): ts.ObjectLiteralExpression {
+    const typesArrayEx = ts.factory.createArrayLiteralExpression(types);
+    const allOfProp = ts.factory.createPropertyAssignment('anyOf', typesArrayEx);
+    const allOfExp = ts.factory.createObjectLiteralExpression([allOfProp]);
+    return allOfExp;
 }
