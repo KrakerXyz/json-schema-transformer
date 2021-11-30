@@ -1,16 +1,21 @@
 
 import { jsonSchema } from '../../src';
 
-export interface User {
-    readonly id: string;
-    name: string;
-    description?: string | null;
-    items: UserItem[];
+enum Foo {
+    Bar = 'bar',
+    Fizz = 'fizz'
 }
 
-export interface UserItem {
-    foo: string;
-    bar: string | number;
+interface Type1 {
+    foo: Foo.Bar;
+    extra: string;
 }
 
-const test = jsonSchema<User>();
+interface Type2 {
+    foo: Foo.Fizz;
+    extra2: string;
+}
+
+type Combined = Type1 | Type2;
+
+const _ = jsonSchema<Combined>();

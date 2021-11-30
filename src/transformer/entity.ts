@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import { createProperty, Properties } from './properties';
 
-export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): Entity | [Entity] {
+export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): Entity | [Entity] | [Entity[]] {
 
     if (ts.isArrayTypeNode(node)) {
 
@@ -14,6 +14,13 @@ export function createEntity(typeChecker: ts.TypeChecker, node: ts.TypeNode): En
         return [entity];
     } else {
         const type = typeChecker.getTypeFromTypeNode(node);
+
+        if (type.isUnion()) {
+            const types = type.types;
+            const unionEntities = types.map(t => getEntityFromType(typeChecker, t));
+            return [unionEntities];
+        }
+
         const entity = getEntityFromType(typeChecker, type);
         return entity;
     }
