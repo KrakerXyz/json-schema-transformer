@@ -2,7 +2,7 @@
   "name": "@krakerxyz/json-schema-transformer",
   "description": "TypeScript transformer that will generate a json schema for a given type at build time.",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/KrakerXyz/json-schema-transformer"
@@ -11,7 +11,8 @@
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "files": [
-    "dist/"
+    "dist/",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "json",

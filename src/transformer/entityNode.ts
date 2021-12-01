@@ -1,33 +1,37 @@
 import * as ts from 'typescript';
-import { Entity } from './entity';
+import { Entity, EntityType } from './entity';
 import { Properties, Property, PropertyValue, ValueType, ValueValue } from './properties';
 
 //Entity: The schema is just a simple object
 //[Entity]: The schema is an array of single type Entity
 //[Entity[]]: The schema is an array with more than one element type
-export function createEntityNode(entity: Entity | [Entity] | [Entity[]]): ts.ObjectLiteralExpression {
+export function createEntityNode(entity: Entity): ts.ObjectLiteralExpression {
 
     let jsonSchemaEx: ts.ObjectLiteralExpression | undefined;
 
-    if (Array.isArray(entity)) {
-
-        console.assert(entity.length === 1);
+    if (entity.isArray) {
 
         const properties: ts.PropertyAssignment[] = [
             ts.factory.createPropertyAssignment('type', ts.factory.createStringLiteral('array'))
         ];
 
-        if (Array.isArray(entity[0])) {
-            const elementObjects = entity[0].map(e => createObjectType(e.properties));
+        if (entity.allowedTypes.length > 1) {
+            const elementObjects = entity.allowedTypes.map(e => createObjectType(e.properties));
             const anyOf = createAnyOfObjectExpression(elementObjects);
             properties.push(ts.factory.createPropertyAssignment('items', anyOf));
         } else {
-            properties.push(ts.factory.createPropertyAssignment('items', createObjectType(entity[0].properties)));
+            properties.push(ts.factory.createPropertyAssignment('items', createObjectType(entity.allowedTypes[0].properties)));
         }
 
         jsonSchemaEx = ts.factory.createObjectLiteralExpression(properties);
+
     } else {
-        jsonSchemaEx = createObjectType(entity.properties);
+        if (entity.allowedTypes.length > 1) {
+            const elementObjects = entity.allowedTypes.map(e => createObjectType(e.properties));
+            jsonSchemaEx = createAnyOfObjectExpression(elementObjects);
+        } else {
+            jsonSchemaEx = createObjectType(entity.allowedTypes[0].properties);
+        }
     }
 
     return jsonSchemaEx;
@@ -55,7 +59,7 @@ function createObjectType(properties: Properties): ts.ObjectLiteralExpression {
     return jsonSchemaEx;
 }
 
-function createPropertiesExpression(properties: Entity['properties']): ts.ObjectLiteralExpression {
+function createPropertiesExpression(properties: EntityType['properties']): ts.ObjectLiteralExpression {
 
     const propExs: ts.ObjectLiteralElementLike[] = [];
 
