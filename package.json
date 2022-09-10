@@ -1,42 +1,42 @@
 {
-  "name": "@krakerxyz/json-schema-transformer",
-  "description": "TypeScript transformer that will generate a json schema for a given type at build time.",
-  "private": false,
-  "version": "0.2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/KrakerXyz/json-schema-transformer"
-  },
-  "type": "commonjs",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "files": [
-    "dist/",
-    "CHANGELOG.md"
-  ],
-  "keywords": [
-    "json",
-    "schema",
-    "transformer"
-  ],
-  "author": {
-    "name": "Josh Kraker",
-    "email": "joshkrak@gmail.com"
-  },
-  "license": "MIT",
-  "scripts": {
-    "clean": "rimraf ./dist/*",
-    "build": "npm run clean && tsc && tsc -p tsconfig-cjs.json",
-    "lint": "eslint ./src/**/*.ts",
-    "prepublishOnly": "npm run build"
-  },
-  "devDependencies": {
-    "@types/node": "^16",
-    "@typescript-eslint/eslint-plugin": "^5",
-    "@typescript-eslint/parser": "^5",
-    "eslint": "^8",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.2.3"
-  },
-  "sideEffects": false
+    "name": "@krakerxyz/json-schema-transformer",
+    "description": "TypeScript transformer that will generate a json schema for a given type at build time.",
+    "private": false,
+    "version": "0.3.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/KrakerXyz/json-schema-transformer"
+    },
+    "type": "commonjs",
+    "main": "./dist/cjs/index.js",
+    "module": "./dist/esm/index.js",
+    "files": [
+        "dist/",
+        "CHANGELOG.md"
+    ],
+    "keywords": [
+        "json",
+        "schema",
+        "transformer"
+    ],
+    "author": {
+        "name": "Josh Kraker",
+        "email": "joshkrak@gmail.com"
+    },
+    "license": "MIT",
+    "scripts": {
+        "clean": "rimraf ./dist/*",
+        "build": "npm run clean && tsc && tsc -p tsconfig-cjs.json",
+        "lint": "eslint ./src/**/*.ts",
+        "prepublishOnly": "npm run build"
+    },
+    "devDependencies": {
+        "@types/node": "^16",
+        "@typescript-eslint/eslint-plugin": "^5",
+        "@typescript-eslint/parser": "^5",
+        "eslint": "^8",
+        "rimraf": "^3.0.2",
+        "typescript": "^4.2.3"
+    },
+    "sideEffects": false
 }
