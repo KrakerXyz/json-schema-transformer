@@ -1,4 +1,8 @@
 
+# 0.2.0 (2021-11-29)
+- Fix null-ref regression
+- Added union type support at the root for non-arrays
+
 # 0.1.1 (2021-11-29)
 - Fixed issue generating schema where the root type is an alias (union) of two or more types (`Combined`).
 - Check for property type references a specific enum value and treat these as constants (`foo: Foo.Bar`).

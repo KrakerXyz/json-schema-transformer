@@ -8,14 +8,19 @@ export function createProperty(typeChecker: ts.TypeChecker, symbol: ts.Symbol): 
     const fullName = `${(symbol as any).parent?.name}.${symbol.name}`;
 
     if (!symbol.declarations?.length) { throw new Error(`Symbol does not have any declarations (${fullName})`); }
-    if (symbol.declarations.length > 1) { throw new Error(`More than one declaration for symbol was unexpected (${fullName})`); }
+    if (symbol.declarations.length > 1) {
+        throw new Error(`More than one declaration for symbol was unexpected (${fullName})`);
+    }
 
     const declaration = symbol.declarations[0];
     if (!ts.isPropertySignature(declaration)) {
-        throw new Error(`Declaration for symbol was not a PropertyDeclaration (${fullName})`);
+        throw new Error(`Declaration for symbol was not a PropertyDeclaration (${fullName}). It was ${ts.SyntaxKind[declaration.kind]}`);
     }
+
+    const isPartial = (symbol as any).mappedType?.aliasSymbol?.escapedName === 'Partial';
+
     return {
-        isOptional: !!declaration.questionToken,
+        isOptional: !!declaration.questionToken || isPartial,
         values: getType(fullName, declaration.type!, typeChecker)
     };
 
@@ -86,6 +91,31 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
             const refType = t as ts.TypeReferenceNode;
             const type = typeChecker.getTypeFromTypeNode(refType);
 
+            //I was using Omit<Enum, Enum.Item> and could not find an easy way to see whats left
+            if (type.aliasSymbol?.escapedName === 'Omit') { throw new Error('Omit is not supported'); }
+
+            
+            if (type.isUnion()) {
+                const properties: PropertyValue[] = [];
+                for (const ut of type.types) {
+                    if ('intrinsicName' in ut) {
+                        properties.push({
+                            type: ValueType.Value,
+                            value: (ut as any).intrinsicName
+                        });
+                    } else if ('value' in ut) {
+                        properties.push({
+                            type: ValueType.Literal,
+                            value: (ut as any).value
+                        });
+                    } else {
+                        console.error(`Unknown union type '${ut.getSymbol()?.name}'`, ut);
+                        throw new Error(`Unknown union type '${ut.getSymbol()?.name}'`);
+                    }
+                }
+                return properties;
+            }
+
             const enumDecl = (type.aliasSymbol?.declarations ?? [])[0];
             if (enumDecl && ts.isEnumDeclaration(enumDecl)) {
                 const members = enumDecl.members;
@@ -105,13 +135,20 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
                         };
                     }
 
+                    if (ts.isNumericLiteral(m.initializer)) {
+                        return {
+                            type: ValueType.Literal,
+                            value: parseInt(m.initializer.text ?? i.toString())
+                        };
+                    }
+
                     throw new Error(`Unknown initializer type for enum of ${fullName}`);
                 });
                 return values;
             }
 
             //This tests for a property who's value is a specific enum value. Eg, { foo: Foo.Bar } where Foo is an enum
-            const typeSymbolDecl0: ts.Declaration | undefined = (type.symbol.declarations ?? [])[0];
+            const typeSymbolDecl0: ts.Declaration | undefined = (type.symbol?.declarations ?? [])[0];
             if (typeSymbolDecl0 && ts.isEnumMember(typeSymbolDecl0)) {
                 return [{ type: ValueType.Literal, value: (type as any).value }];
             }
