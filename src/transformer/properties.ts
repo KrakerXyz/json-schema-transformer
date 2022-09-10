@@ -94,6 +94,28 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
             //I was using Omit<Enum, Enum.Item> and could not find an easy way to see whats left
             if (type.aliasSymbol?.escapedName === 'Omit') { throw new Error('Omit is not supported'); }
 
+            
+            if (type.isUnion()) {
+                const properties: PropertyValue[] = [];
+                for (const ut of type.types) {
+                    if ('intrinsicName' in ut) {
+                        properties.push({
+                            type: ValueType.Value,
+                            value: (ut as any).intrinsicName
+                        });
+                    } else if ('value' in ut) {
+                        properties.push({
+                            type: ValueType.Literal,
+                            value: (ut as any).value
+                        });
+                    } else {
+                        console.error(`Unknown union type '${ut.getSymbol()?.name}'`, ut);
+                        throw new Error(`Unknown union type '${ut.getSymbol()?.name}'`);
+                    }
+                }
+                return properties;
+            }
+
             const enumDecl = (type.aliasSymbol?.declarations ?? [])[0];
             if (enumDecl && ts.isEnumDeclaration(enumDecl)) {
                 const members = enumDecl.members;
