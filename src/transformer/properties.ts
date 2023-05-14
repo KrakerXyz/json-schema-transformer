@@ -108,6 +108,35 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
                             type: ValueType.Literal,
                             value: (ut as any).value
                         });
+                    } else if ('properties' in ut) {
+
+                        // Found by having a type that is a union of two interfaces
+                        /*
+
+                        type FooBar = Foo | Bar;
+
+                        interface Parent {
+                            fooBar: FooBar; // This is the one we're fixing
+                        }
+                        }
+
+                        interface Foo {
+                            foo: string;
+                        }
+
+                        interface Bar {
+                            bar: string;
+                        }
+
+                        */
+                        const typeProperties = typeChecker.getPropertiesOfType(ut);
+                        const fields = typeProperties.map(s => ({ [s.name]: createProperty(typeChecker, s) }));
+                        const fieldConfig = fields.reduce((prev, cur) => ({ ...prev, ...cur }), {} as Record<string, Property>);
+
+                        properties.push({
+                            type: ValueType.Object,
+                            value: fieldConfig
+                        });
                     } else {
                         console.error(`Unknown union type '${ut.getSymbol()?.name}'`, ut);
                         throw new Error(`Unknown union type '${ut.getSymbol()?.name}'`);
@@ -158,7 +187,7 @@ function getType(fullName: string, t: ts.TypeNode, typeChecker: ts.TypeChecker):
             }
 
             const texts: string[] | undefined = (type as any).texts;
-            if (texts?.length && texts[0] == '' && texts.slice(-1)[0] === '') {
+            if (texts?.length && texts[0] == '') {
                 //When we have something like 
                 //
                 //type Id = `${string}-${string}`
