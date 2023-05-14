@@ -1,41 +1,47 @@
 
 import { jsonSchema } from '../../src';
 
-type DeviceLogsFilter = DeviceLogFilterLog | DeviceLogFilterGeneric;
+export type Id = `${string}-${string}-${string}-${string}-${string}`;
+export type IdRev = `${Id}/${number}`;
+export type IdRevLatest = `${Id}/latest`;
 
-enum DeviceLogType {
-    Info = 'info',
-    Health = 'health',
-    Log = 'log'
+export interface Flow {
+    id: IdRev,
+    name: string,
+    description: string | null,
+    setup: FlowSetup,
+    actions: Action[],
 }
 
-enum DeviceLogLevel {
-    Debug = 20,
-    Info = 30,
-    Warn = 40,
-    Error = 50,
-    Fatal = 60
+export interface FlowSetup {
+    variables: Variable[],
 }
 
-interface DeviceLogFilterLog extends DeviceLogFilterBase {
-    type: DeviceLogType.Log;
-    level?: {
-        start?: DeviceLogLevel | number;
-        end?: DeviceLogLevel | number;
-    };
-}
-interface DeviceLogFilterGeneric extends DeviceLogFilterBase {
-    type?: DeviceLogType.Info | DeviceLogType.Health;
+export interface Variable {
+    name: string,
+    value: string | boolean | null,
 }
 
-type Id = `${string}-${string}-${string}-${string}-${string}`;
+export type Action = CreateWidgetAction | MethodCallAction;
 
-interface DeviceLogFilterBase {
-    deviceIds?: [Id, ...Id[]] | null;
-    created?: {
-        after?: number;
-        before?: number;
-    };
+interface CreateWidgetAction {
+    id: Id,
+    name: 'create-widget',
+    widgetId: IdRev | IdRevLatest,
 }
 
-const _ = jsonSchema<DeviceLogsFilter>();
+interface MethodCallAction {
+    id: Id,
+    name: 'method-call',
+    widgetSource: {
+        type: 'widget-name',
+        name: string,
+    } | {
+        type: 'create-action-id',
+        actionId: Id,
+    },
+    methodName: string,
+}
+
+
+const _ = jsonSchema<Flow>();
